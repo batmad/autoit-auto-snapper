@@ -15,26 +15,40 @@ Func OpenChrome($path)
 	WriteToLog("Opening Chrome browser")
     Local $tipeBrowser = "--incognito"
     	
-    Run($path & " " & $tipeBrowser)
-		Sleep(20000)
+	; Closes all Chrome instances
+	ProcessClose("chrome.exe")
+		Sleep(10000)
     
-	; Memastikan jendela Chrome muncul di depan
+	; Open Chrome Apps
+	Run($path & " " & $tipeBrowser)
+		Sleep(30000)
+	
+	; Show Desktop to Make all Applications not Shown in Windows
+	ShowDesktop()
+		Sleep(5000)
+    
+	; Click running chrome in taskbar 
+	MouseClick("left", $xCoordClickChromeRunTask, $yCoordClickChromeRunTask)
+		Sleep(20000)
+		
+	; Make sure the Chrome window appears in front
     Local $chromeHandle = WinGetHandle("[CLASS:Chrome_WidgetWin_1]")
 	_WinAPI_SetForegroundWindow($chromeHandle)
-		Sleep(5000)
+		Sleep(10000)
 		
     For $i = 1 To 3
         Send("#{UP}")
-			Sleep(500) ; Optional: Add a small delay between each key press
+			Sleep(2000) ; Add a small delay between each key press
     Next
-		Sleep(2000)
+		Sleep(5000)
     
+	; Press Ctrl+0 to set the zoom level to 100%
     Send("^0")
-		Sleep(2000)
+		Sleep(5000)
     
-    ; Cek zoom level
+    ; Check the zoom level
     If Not _ZoomLevelIs100Percent() Then
-		; Jika zoom tidak sama dengan 100%, ubah menjadi 100%
+		; If zoom is not equal to 100%, change it to 100%
 		_SetZoomLevelTo100Percent()
     EndIf
 	
@@ -42,14 +56,14 @@ Func OpenChrome($path)
 EndFunc
 
 Func _ZoomLevelIs100Percent()
-    ; Dapatkan title window dari browser
+    ; Get the window title from the browser
     Local $hWnd = WinGetHandle("[CLASS:Chrome_WidgetWin_1]")
     Local $sTitle = WinGetTitle($hWnd)
 
-    ; Dapatkan zoom level menggunakan string regex
+    ; Get zoom level using regex string
     Local $sZoomLevel = StringRegExpReplace($sTitle, '.*\((\d+)%\).*', '\1')
 
-    ; Periksa apakah zoom level adalah 100%
+    ; Check if the zoom level is 100%
     If $sZoomLevel = "100" Then
         Return True
     Else
@@ -58,7 +72,7 @@ Func _ZoomLevelIs100Percent()
 EndFunc
 
 Func _SetZoomLevelTo100Percent()
-    ; Tekan tombol Ctrl+0 untuk mengatur zoom level ke 100%
+    ; Press Ctrl+0 to set the zoom level to 100%
     Send("^0")
 		Sleep(2000)
 EndFunc
@@ -66,48 +80,58 @@ EndFunc
 Func CloseChrome()
 	WriteToLog("Closing Chrome browser")
     Send("^w")
-		Sleep(2000)
+		Sleep(5000)
 EndFunc
 
 Func LoginWeb($url, $coordinates, $username, $password)
 	WriteToLog("Attempting to login to website : " & $url)
 	
+	; Click the input column url
     MouseClick("left", $xCoordClickColumnURL, $yCoordClickColumnURL)
-		Sleep(2000)
+		Sleep(8000)
+	
+	; Ctrl + a
     Send("^a")
+	; Input URL
     Send($url)
+	; Go to Url page
     Send("{ENTER}")
-		Sleep(10000)
+		Sleep(30000)
+	
+	; Click Title Tab
     MouseClick("left", $xCoordClickTitleTabWeb, $yCoordClickTitleTabWeb)
-		Sleep(5000)
+		Sleep(10000)
     
-    ; Cek zoom level
+    ; Check the zoom level
     If Not _ZoomLevelIs100Percent() Then
-		; Jika zoom tidak sama dengan 100%, ubah menjadi 100%
+		; If zoom is not equal to 100%, change it to 100%
 		_SetZoomLevelTo100Percent()
     EndIf
 
-		Sleep(10000)
+		Sleep(15000)
 
-    ; Cek website privacy error
+    ; Check the website privacy error
     If StringInStr(WinGetTitle("[CLASS:Chrome_WidgetWin_1]", ""), "Privacy Error - Google Chrome") Then
 		continuePrivacyConnection()
     EndIf
    
+    ; Login input Username 
     MouseClick("left", $coordinates[0][0], $coordinates[0][1])
-		Sleep(2000) 
+		Sleep(4000) 
     Send("^a")
     Send($username)
-        Sleep(2000)
+        Sleep(4000)
 	
+	; Login input Password 
     MouseClick("left", $coordinates[1][0], $coordinates[1][1])
-		Sleep(2000)
+		Sleep(4000)
     Send("^a")	
     Send($password)
-        Sleep(2000)
+        Sleep(4000)
 	
+	; Click button login
     MouseClick("left", $coordinates[2][0], $coordinates[2][1])
-		Sleep(15000) 
+		Sleep(30000) 
 		
 	WriteToLog("Successful attempting to login")
 EndFunc
@@ -115,34 +139,43 @@ EndFunc
 Func LoginWebPrivacyConnect($url, $coordinates, $username, $password)
 	WriteToLog("Attempting to login to website : " & $url)
 	
+	; Click the input column url
     MouseClick("left", $xCoordClickColumnURL, $yCoordClickColumnURL)
 		Sleep(2000)
+		
+	; Ctrl + a
     Send("^a")
+	; Input URL
     Send($url)
+	; Go to Url page
     Send("{ENTER}")
 		Sleep(15000)
     
-    ; Cek zoom level
+    ; Check the zoom level
     If Not _ZoomLevelIs100Percent() Then
-		; Jika zoom tidak sama dengan 100%, ubah menjadi 100%
+		; If zoom is not equal to 100%, change it to 100%
 		_SetZoomLevelTo100Percent()
     EndIf
 
 		Sleep(8000)
+	; Run Func continuePrivacyConnection
 	continuePrivacyConnection()
    
+   ; Login input Username 
     MouseClick("left", $coordinates[0][0], $coordinates[0][1])
 		Sleep(2000) 
     Send("^a")
     Send($username)
         Sleep(2000)
 	
+	; Login input Password
     MouseClick("left", $coordinates[1][0], $coordinates[1][1])
 		Sleep(2000)
     Send("^a")	
     Send($password)
         Sleep(2000)
 	
+	; Click button login
     MouseClick("left", $coordinates[2][0], $coordinates[2][1])
 		Sleep(10000) 
 		
@@ -165,11 +198,10 @@ Func OpenUrlCapture($url, $path, $name, $iZoomOutClicks, $waitingTime)
     Send("{ENTER}")
 		Sleep($waitingTime)
 	
-	; Cek zoom level
+    ; Check the zoom level
     If Not _ZoomLevelIs100Percent() Then
-		; Jika zoom tidak sama dengan 100%, ubah menjadi 100%
+		; If zoom is not equal to 100%, change it to 100%
 		_SetZoomLevelTo100Percent()
-			Sleep(2000) 
     EndIf
 	
 	; Zoom Out
@@ -397,11 +429,11 @@ Func SendScreenshotToWhatsApp($groupChatName, $screenshotFolder, $caption)
 	WriteToLog("Attempting sending to WhatsApp...")
 		Sleep(2000)
     ProcessClose("WhatsApp.exe")
-		Sleep(2000)
+		Sleep(5000)
     
     ; Open WhatsApp using coordinates
     MouseClick("left", $xCoordOpenWhatsapp, $yCoordOpenWhatsapp)
-		Sleep(35000)
+		Sleep(60000)
 
     ; Cek zoom level
     If Not _ZoomLevelIs100Percent() Then
@@ -412,57 +444,57 @@ Func SendScreenshotToWhatsApp($groupChatName, $screenshotFolder, $caption)
     ; Send Ctrl+F to open the search bar
     Send("^f")
     Send("^a")
-		Sleep(10000)
+		Sleep(15000)
     Send($groupChatName)
-		Sleep(10000)
+		Sleep(15000)
 
     ; Open group chat
     MouseClick("left", $xCoordOpenChat, $yCoordOpenChat)
-		Sleep(12000)
+		Sleep(15000)
 
 	; Click Column Input Text
     MouseClick("left", $xCoordInputTextWhatsapp, $yCoordInputTextWhatsapp)
-		Sleep(10000)
+		Sleep(15000)
 	
 	; Insert Caption Greetings
 	Send("^a")
     Send($caption)
-        Sleep(10000)
+        Sleep(15000)
 	Send("{ENTER}")
 	WriteToLog("Insert caption Whatsapp : " & $caption)
-		Sleep(10000)
+		Sleep(15000)
 		
     ; Click button attach
     MouseClick("left", $xCoordButtonAttach, $yCoordButtonAttach)
-		Sleep(10000)
+		Sleep(20000)
 
     ; Click button image
     MouseClick("left", $xCoordButtonImg, $yCoordButtonImg)
-		Sleep(25000)
+		Sleep(40000)
 
     ; Click path
     MouseClick("left", $xCoordPath, $yCoordPath)
-		Sleep(10000)
+		Sleep(15000)
 
     ; Enter path location folder
     Send($screenshotFolder)
-		Sleep(10000)
+		Sleep(15000)
     Send("{ENTER}")
-		Sleep(12000)
+		Sleep(30000)
 
     ; Select all images
     MouseClick("left", $xCoordSelectImg, $yCoordSelectImg)
 		Sleep(10000)
     Send("^a")
-		Sleep(12000)
+		Sleep(15000)
 
     ; Click open for send
     MouseClick("left", $xCoordOpenImg, $yCoordOpenImg)
-		Sleep(12000)
+		Sleep(25000)
 
     ; Send images
     MouseClick("left", $xCoordSendImg, $yCoordSendImg)
-		Sleep(15000)
+		Sleep(30000)
 	WriteToLog("Sending screenshot to WhatsApp...")
 EndFunc
 
@@ -470,22 +502,22 @@ Func OpenAppWhatsapp()
 	WriteToLog("Attempting to open WhatsApp...")
 		Sleep(2000)
     ProcessClose("WhatsApp.exe")
-		Sleep(2000)
+		Sleep(5000)
     
     ; Open WhatsApp using coordinates
     MouseClick("left", $xCoordOpenWhatsapp, $yCoordOpenWhatsapp)
-		Sleep(35000)
+		Sleep(60000)
 EndFunc
 
 Func SendCaptureWhatsapp($groupChatName, $screenshotFolder, $caption)
 		Sleep(2000)
 	MouseClick("left", 637, 371)
-		Sleep(5000)
+		Sleep(20000)
 		
 	If Not WinActive("WhatsApp") Then
 		; Open WhatsApp using coordinates
 		MouseClick("left", $xCoordOpenWhatsapp, $yCoordOpenWhatsapp)
-			Sleep(35000)
+			Sleep(60000)
 	EndIf
 	
     ; Cek zoom level
@@ -497,57 +529,57 @@ Func SendCaptureWhatsapp($groupChatName, $screenshotFolder, $caption)
     ; Send Ctrl+F to open the search bar
     Send("^f")
     Send("^a")
-		Sleep(10000)
+		Sleep(15000)
     Send($groupChatName)
-		Sleep(10000)
+		Sleep(15000)
 
     ; Open group chat
     MouseClick("left", $xCoordOpenChat, $yCoordOpenChat)
-		Sleep(12000)
+		Sleep(15000)
 
 	; Click Column Input Text
     MouseClick("left", $xCoordInputTextWhatsapp, $yCoordInputTextWhatsapp)
-		Sleep(10000)
+		Sleep(15000)
 	
 	; Insert Caption Greetings
 	Send("^a")
     Send($caption)
-        Sleep(10000)
+        Sleep(15000)
 	Send("{ENTER}")
 	WriteToLog("Insert caption Whatsapp : " & $caption)
-		Sleep(10000)
+		Sleep(15000)
 		
     ; Click button attach
     MouseClick("left", $xCoordButtonAttach, $yCoordButtonAttach)
-		Sleep(10000)
+		Sleep(20000)
 
     ; Click button image
     MouseClick("left", $xCoordButtonImg, $yCoordButtonImg)
-		Sleep(25000)
+		Sleep(40000)
 
     ; Click path
     MouseClick("left", $xCoordPath, $yCoordPath)
-		Sleep(10000)
+		Sleep(15000)
 
     ; Enter path location folder
     Send($screenshotFolder)
-		Sleep(10000)
+		Sleep(15000)
     Send("{ENTER}")
-		Sleep(12000)
+		Sleep(30000)
 
     ; Select all images
     MouseClick("left", $xCoordSelectImg, $yCoordSelectImg)
 		Sleep(10000)
     Send("^a")
-		Sleep(12000)
+		Sleep(15000)
 
     ; Click open for send
     MouseClick("left", $xCoordOpenImg, $yCoordOpenImg)
-		Sleep(12000)
+		Sleep(25000)
 
     ; Send images
     MouseClick("left", $xCoordSendImg, $yCoordSendImg)
-		Sleep(15000)
+		Sleep(30000)
 	WriteToLog("Sending screenshot to WhatsApp...")
 EndFunc
 	
@@ -596,9 +628,9 @@ Func DeleteFolder($folderPath)
     EndIf
 EndFunc
 
-; Fungsi untuk memeriksa koneksi internet
+; Function to check connection before continuing
 Func CheckInternetConnection()
-    Local $pingResult = Ping("google.com")
+    Local $pingResult = Ping($IPCheckConn)
     If @error Then
 		WriteToLog("No internet connection, process terminated")
         Return False
@@ -608,16 +640,69 @@ Func CheckInternetConnection()
     EndIf
 EndFunc
 
-;; API Whatsapp Baileys ;;
-
-Func SendMessageAPI($number, $message, $filepath)
-    Local $sCmd = 'curl --location "http://localhost:8000/send-message" --form "message=' & $message & '" --form "number=' & $number & '" --form "file_dikirim=@\"' & $filepath & '\""'
-	Run(@ComSpec & ' /c ' & $sCmd, '', @SW_HIDE)
+; Function to check color and click correct coordinates
+Func CheckAndClickColor($coords)
+    Local $color = PixelGetColor($coords[0], $coords[1])
+    If Hex($color, 6) = '1DAA61' Then
+        MouseClick("left", $coords[0], $coords[1])
+        Return True
+    EndIf
+    Return False
 EndFunc
 
-Func SendMessageGroupAPI($idGroup, $message, $filepath)
-    Local $sCmd = 'curl --location "http://localhost:8000/send-group-message" --form "message=' & $message & '" --form "id_group=' & $idGroup & '" --form "file_dikirim=@\"' & $filepath & '\""'
-	Run(@ComSpec & ' /c ' & $sCmd, '', @SW_HIDE)
+Func ForwardMessage($groupChatNames)
+		Sleep(10000)
+    ; Right click on the message caption to be selected
+    MouseClick("right", $xCoordRightClickCapts, $yCoordRightClickCapts)
+		Sleep(10000)
+	
+    ; Click button select
+    MouseClick("left", $xCoordClickBtnSlect, $yCoordClickBtnSlect)
+		Sleep(10000)
+	
+    ; Select pics to forward
+    MouseClick("left", $xCoordSlectPicsFwrd, $yCoordSlectPicsFwrd)
+		Sleep(10000)
+	
+    ; Click button forward
+    MouseClick("left", $xCoordClickBtnFrwd, $yCoordClickBtnFrwd)
+		Sleep(20000)
+	
+    ; Looping to select each group name to send
+    For $i = 0 To UBound($groupChatNames) - 1
+		; Click column search
+		;MouseClick("left", $xCoordClickClmnSrchFrwd, $yCoordClickClmnSrchFrwd)
+		;	Sleep(10000)
+        
+		; Ctrl + A (select all)
+		;Send("^a")
+		;	Sleep(10000)
+	
+		; Input contact name dari array
+		Send($groupChatNames[$i])
+			Sleep(30000)
+    
+		; Click grup/contact
+		; Tekan Tab
+		If $i = 0 Then
+			; Iterasi pertama: Tekan Tab satu kali
+			Send("{TAB}")
+		Else
+			; Iterasi berikutnya: Tekan Tab dua kali
+			Send("{TAB 2}")
+		EndIf
+			Sleep(10000)  ; Tunggu sejenak (opsional)
+		; Tekan Enter
+		Send("{ENTER}")
+			Sleep(15000)
+    Next
+    
+	; Check the color and click on the appropriate group/contact
+    If Not CheckAndClickColor($CoordClickCntctFrwrdLv1) Then
+        If Not CheckAndClickColor($CoordClickCntctFrwrdLv2) Then
+            CheckAndClickColor($CoordClickCntctFrwrdLv3)
+        EndIf
+    EndIf
+	
+		Sleep(30000)
 EndFunc
-
-
